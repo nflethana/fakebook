@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Map</title>
+  <link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+  <script src="http://maps.google.com/maps/api/js?sensor=true"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+  </script><script type="text/javascript">
+    var map;
+    var markers = [];
+    var getRestaurants = function() {
+    	$.get("/ajaxgetrestaurants",
+	    function(data, status) {
+	      if (status === 'success') {
+	      data.array.forEach(function(x) {
+	        var myPos = new google.maps.LatLng(x.Latitude,x.Longitude);
+			var marker = new google.maps.Marker({position: myPos, draggable:false});
+	
+			marker[x.Name] = new google.maps.InfoWindow({
+  				content: "<b>"+x.Name+"</b><br>"+x.Description+"<br><i>"+x.Creator+"</i>"
+			});
+			google.maps.event.addListener(marker, 'click', function() {
+  				this[x.Name].open(map, this);
+			});
+			google.maps.event.addListener(marker, 'rightclick', function() {
+				$.post("/ajaxremove",
+				  {
+				  	delname: x.Name,
+				  	deluser: x.Creator
+				  },
+				  function (data, status) {
+				  	if (data) {
+				  		marker.setMap(null);
+				  	} else {
+				  		alert("There was an error removing the restaurant, be sure that you are only deleting entries you have created!");
+				  	}
+				  });
+			});
+
+			if (data.user == x.Creator) {
+				marker.setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
+			}
+			marker.setMap(map);
+			markers.push(marker);
+	      });
+	      } else {
+			alert("Data: " + data + "\nStatus: " + status);
+	      }
+      });
+    };
+    var loadMap = function() {
+        var myOptions = {
+               center: new google.maps.LatLng(39.952335, -75.163789),
+               zoom: 11,
+               mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+      map = new google.maps.Map(document.getElementById("map"), myOptions);
+    
+	  getRestaurants();
+    
+    
+    google.maps.event.addListener(map, 'click', function( event ){
+    	document.getElementById('lat').value = event.latLng.lat(); 
+       	document.getElementById('lng').value = event.latLng.lng();
+  		}
+	);
+	
+	
+	
+    };
+	
+	function ajcall(){
+	  $.post("/ajaxadd",
+	  	{
+	      addlat: $("#lat")[0].value,
+	      addlng: $("#lng")[0].value,
+	      addname: $("#name")[0].value,
+	      adddesc: $("#desc")[0].value,
+	      adduser: "<%= user %>"
+	    },
+	    function(data, status) {
+	      if (!data) {
+	      	alert("Something went wrong adding a restaurant.  Please be sure no entries are empty!");
+	      } else {
+	      	var myPos = new google.maps.LatLng($("#lat")[0].value,$("#lng")[0].value);
+			var marker = new google.maps.Marker({position: myPos, draggable:false});
+	
+			marker[$("#name")[0].value] = new google.maps.InfoWindow({
+  				content: "<b>"+$("#name")[0].value+"</b><br>"+$("#desc")[0].value+"<br><i><%= user %></i>"
+			});
+			google.maps.event.addListener(marker, 'click', function() {
+  				this[$("#name")[0].value].open(map, this);
+			});
+			google.maps.event.addListener(marker, 'rightclick', function() {
+				$.post("/ajaxremove",
+				  {
+				  	delname: $("#name")[0].value,
+				  	deluser: "<%= user %>"
+				  },
+				  function (data, status) {
+				  	if (data) {
+				  		marker.setMap(null);
+				  	} else {
+				  		alert("There was an error removing the restaurant!");
+				  	}
+				  });
+			});
+			
+			marker.setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
+			
+			marker.setMap(map);
+			markers.push(marker);
+	      }
+	    }
+      );
+      return false;
+	};
+	
+	var refreshTime = function() {
+		for (var i = 0; i < markers.length; i++) {
+			markers[i].setMap(null);
+		}
+		getRestaurants();
+		setTimeout(refreshTime, 10000);
+	}
+	$(document).ready(function() {
+		setTimeout(refreshTime, 10000);
+	});
+	
+	window.onload = function() { loadMap(); }
+	
+  </script>
+  
+</head><body>
+  <%if (message != null) { %>
+  <font color="red"><%= message %></font>
+  <% } %>
+  <h1>Lookup Results</h1>
+  Hello <%= fullname %>!<br>
+  
+  <div id="map" style="width:500px;height:500px;"></div>
+  
+  <br>
+  <form id="theform" action="" method="" onSubmit="ajcall(); return false">
+    Enter Latitude Here: <input id="lat" type="text" name="latitude"><br>
+    Enter Longitude Here: <input id="lng" type="text" name = "longitude"><br>
+    Enter Restaurant Name Here: <input type="text" id="name" name = "name"><br>
+    Enter Brief Description Here: <input type="text" id="desc" name="description">
+    <br><input type="submit" id="btn" value="Add">
+  </form>
+  <br><a href="/logout">Log Out</a>
+</body>
+</html>

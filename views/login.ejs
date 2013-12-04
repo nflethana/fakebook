@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+<body>
+  <%if (message != null) { %>
+  <font color="red"><%= message %></font>
+  <% } %>
+  <h1>Sign In</h1>
+  <form action="/checklogin" method="post">
+    Enter Username Here: <input type="text" name="username"><br>
+    Enter Password Here: <input type="text" name = "password">
+    <input type="submit" value="Login">
+  </form>
+  <a href="/signup">Need an account?</a>
+</body>
+<footer>
+  <p>Full Name: Ethan Abramson</p>
+  <p>SEAS login: etha</p>
+</footer>
+</html>

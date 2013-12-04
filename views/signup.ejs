@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+<body>
+  <%if (message != null) { %>
+  <font color="red"><%= message %></font>
+  <% } %>
+  <h1>Sign Up!</h1>
+  <form action="/createaccount" method="post">
+    Enter Username Here: <input type="text" name="username"><br>
+    Enter Password Here: <input type="text" name = "password"><br>
+    Enter Fullname: <input type="text" name="fullname">
+    <input type="submit" value="Login">
+    <br><a href="/">Already have an account</a>
+  </form>
+</body>
+<footer>
+  <p>Full Name: Ethan Abramson</p>
+  <p>SEAS login: etha</p>
+</footer>
+</html>
