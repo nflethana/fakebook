@@ -204,6 +204,13 @@ var routes = {
   post_checklogin: postChecklogin,
   get_signup: getSignup,
   post_createaccount: postCreateaccount,
+  // get_profile: getProfile,
+  // post_status: postStatus,
+  // post_deletestatus: postDeleteStatus,
+  // get_editprofile: getEditProfile,
+  // post_editprofile: postEditProfile,
+  // post_comment: postComment,
+
   get_restaurants: getRestaurants,
   post_addrestaurant: postAddrestaurant,
   get_logout: getLogout,
