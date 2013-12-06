@@ -31,7 +31,7 @@ DataBase
 SimpleDB, DynamoDB, or S3
 
 DONE  
-**Users**  
+**Users** 
 Username
 Password
 Email
@@ -41,11 +41,11 @@ Interests
 Affiliations
 DateOfBirth
 
-**Friends**
+**Friends** 
 user1
 user2
 
-**Posts**
+**Posts** 
 Username (of Poster)
 Username2 (of Wall)
 Content 
@@ -56,7 +56,7 @@ Comments
 Likes 
 Time
 
-**Notifications**
+**Notifications** 
 Username
 Content
 
