@@ -215,7 +215,8 @@ var ajaxRemove = function(req, res) {
 
 var getProfile = function(req, res) {
 	if (req.session.username && req.session.password && req.session.userdata && req.params.profile === req.session.username) {
-		res.render('profile.ejs', {userdata: req.session.userdata, message: null});
+		//  Get the profile user's data
+		res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: req.params.profile, message: null});
 	} else {
 		// REPLACE WITH CODE FOR IF ANOTHER USER VIEWS YOUR PROFILE PAGE
 		req.session.msg = "You must sign in first!";
@@ -227,9 +228,10 @@ var postStatus = function(req, res) {
 	var newData = {};
 	console.log('in poststatus');
 	if (req.session.username && req.session.password && req.session.userdata) {
-		//  Post the status to the user's own wall
 		//  PROBLEM HERE IS THAT REQ.PARAMS.PROFILE IS NOT WORKING CORRECTLY
-		db.addPost(req.body.addPost, req.body.addUser, req.params.profile, 'timestamp', function(data, err) {
+		console.log(req.body.walluserData);
+		console.log(req.session.userdata);
+		db.addPost(req.body.addPost, req.session.userdata.username, req.body.walluserData.username, 'timestamp', function(data, err) {
 			if (err) {
 				newData.stat = false;
 				newData.err = err;
@@ -238,13 +240,14 @@ var postStatus = function(req, res) {
 				newData.stat = true;
 				newData.post = req.body.post;
 				newData.postingUser = req.session.username;
-				newData.wallUser = req.params.profile;
+				newData.walluserData = req.body.walluserData;
 				newData.timestamp = 'timestamp';
 				res.send(newData);
 			}
 		});
 	} else {
 		newData.stat = false;
+		newData.err = "Something wen't wrong when posting...";
 		res.send(newData);
 	}
 }

@@ -7,8 +7,7 @@
 	var ajcall = function(){
 	  $.post("/status",
 	  	{
-	      addPost: $("#post")[0].value,
-	      addUser: '<%= userdata.username %>'
+	      addPost: $("#post")[0].value
 	    },
 	    function(data, status) {
 	      if (!data.stat) {
@@ -27,7 +26,7 @@
   <%if (message != null) { %>
   <font color="red"><%= message %></font>
   <% } %>
-  <h1><%= userdata.firstname %> <%= userdata.lastname%></h1>
+  <h1><%= wallUser.firstname %> <%= visitorData.lastname%></h1>
   
   <br>
   <form id="theform" action="" method="" onSubmit="ajcall(); return false">
