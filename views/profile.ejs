@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Map</title>
+  <link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+  
+</head><body>
+  <%if (message != null) { %>
+  <font color="red"><%= message %></font>
+  <% } %>
+  <h1><%= userdata.firstname %> <%= userdata.lastname%></h1>
+  
+  <br>
+  <form id="theform" action="" method="" onSubmit="ajcall(); return false">
+    Post to Wall: <input id="post" type="text" name="post"><br>
+ 	<input type="submit" id="btn" value="Post">
+  </form>
+  <br><a href="/logout">Log Out</a>
+</body>
+</html>

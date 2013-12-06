@@ -15,13 +15,24 @@ var myDB_checklogin = function(username, password, route_callback) {
 			route_callback(null, null);
 		} else {
 			// get all the user info to log them in
-			var fullname;
+			var firstname;
+			var lastname;
+			var interestsArray;
+			var affiliationsArray;
+			var dateofbirthArray;
 			var check = false;
 			for (i=0; i < data.Attributes.length; i++) {
-				if (data.Attributes[i].Name == 'fullname') {
+				if (data.Attributes[i].Name == 'firstname') {
+					firstname = data.Attributes[i].Value;
+				} else if (data.Attributes[i].Name == 'lastname') {
+					lastname = data.Attributes[i].Value;
+				} else if (data.Attributes[i].Name == 'interestsArray') {
+					interestsArray = data.Attributes[i].Value;
+				} else if (data.Attributes[i].Name == 'affiliationsArray') {
+					affiliationsArray = data.Attributes[i].Value;
+				} else if (data.Attributes[i].Name == 'dateofbirthArray') {
 					fullname = data.Attributes[i].Value;
-				}
-				if (data.Attributes[i].Name == 'password') {
+				} else if (data.Attributes[i].Name == 'password') {
 					if (data.Attributes[i].Value == password) {
 						console.log("User : " + username + "logged in");
 						check = true;
@@ -30,10 +41,10 @@ var myDB_checklogin = function(username, password, route_callback) {
 			}
 			if (check) {
 				// user was authenticated correctly
-				route_callback({fullname: fullname, auth: true}, null);
+				route_callback({firstname: firstname, lastname: lastname, interestsArray: interestsArray, affiliationsArray: affiliationsArray, dateofbirthArray: dateofbirthArray, auth: true}, null);
 			} else {
 				// user found, but password didn't match
-				route_callback({fullname: fullname, auth: false}, null);
+				route_callback({auth: false}, null);
 			}
 		}
 	});

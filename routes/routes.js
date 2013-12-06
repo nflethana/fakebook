@@ -33,8 +33,8 @@ var postChecklogin = function(req, res) {
 					// login user session and redirect
 					req.session.username = username;
 					req.session.password = password;
-					req.session.fullname = data.fullname;
-					res.redirect('/restaurants');
+					req.session.userdata = data;
+					res.redirect('/' + username);
 				} else {
 					// otherwise notify of incorrect password
 					req.session.msg = "I'm sorry, the password you provided was incorrect";
@@ -97,7 +97,7 @@ var postCreateaccount = function(req, res) {
 				// otherwise log the user in and redirect to /restaurants
 				req.session.username = username;
 				req.session.password = password;
-				res.redirect('/restaurants');
+				res.redirect('/' + username);
 			}
 		});
 	}
@@ -213,12 +213,22 @@ var ajaxRemove = function(req, res) {
 	}
 };
 
+var getProfile = function(req, res) {
+	if (req.session.username && req.session.password && req.session.userdata && req.params.profile === req.session.username) {
+		res.render('profile.ejs', {userdata: req.session.userdata, message: null});
+	} else {
+		// REPLACE WITH CODE FOR IF ANOTHER USER VIEWS YOUR PROFILE PAGE
+		req.session.msg = "You must sign in first!";
+		res.redirect('/');
+	}
+};
+
 var routes = { 
   get_login: getLogin,
   post_checklogin: postChecklogin,
   get_signup: getSignup,
   post_createaccount: postCreateaccount,
-  // get_profile: getProfile,
+  get_profile: getProfile,
   // post_status: postStatus,
   // post_deletestatus: postDeleteStatus,
   // get_editprofile: getEditProfile,

@@ -35,7 +35,7 @@ app.get('/', routes.get_login);
 app.post('/checklogin', routes.post_checklogin);
 app.get('/signup', routes.get_signup);
 app.post('/createaccount', routes.post_createaccount);
-// app.get('/:profile', routes.get_profile);
+app.get('/:profile', routes.get_profile);
 // app.post('/status', routes.post_status);
 // app.post('/deletestatus', routes.post_deletestatus);
 // app.get('/edit/:profile', routes.get_editprofile);
