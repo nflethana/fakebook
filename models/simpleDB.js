@@ -41,7 +41,7 @@ var myDB_checklogin = function(username, password, route_callback) {
 			}
 			if (check) {
 				// user was authenticated correctly
-				route_callback({firstname: firstname, lastname: lastname, interestsArray: interestsArray, affiliationsArray: affiliationsArray, dateofbirthArray: dateofbirthArray, auth: true}, null);
+				route_callback({username: username, firstname: firstname, lastname: lastname, interestsArray: interestsArray, affiliationsArray: affiliationsArray, dateofbirthArray: dateofbirthArray, auth: true}, null);
 			} else {
 				// user found, but password didn't match
 				route_callback({auth: false}, null);
@@ -128,6 +128,17 @@ var myDB_removeRestaurant = function(name, route_callback) {
 	});
 };
 
+var postIndex = 0;
+var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callback) {
+	postIndex++;
+	simpledb.putAttributes({DomainName: 'posts', ItemName: postIndex, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
+		if (err) {
+			route_callback(null, "creation error: " + err);
+		} else {
+			route_callback(true, null);
+		}
+	});
+};
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
    then invoke db.lookup(...), and that call will be routed to myDB_lookup(...). */
@@ -137,7 +148,8 @@ var database = {
   createAccount: myDB_createAccount,
   getRestaurants: myDB_getRestaurants,
   addRestaurant: myDB_addRestaurants,
-  removeRestaurant: myDB_removeRestaurant
+  removeRestaurant: myDB_removeRestaurant,
+  addPost: myDB_addPost
 };
                                         
 module.exports = database;

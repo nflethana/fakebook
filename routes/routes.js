@@ -223,13 +223,36 @@ var getProfile = function(req, res) {
 	}
 };
 
-var routes = { 
+var postStatus = function(req, res) {
+	var data = {};
+	console.log('in poststatus');
+	if (req.session.username && req.session.password && req.session.userdata) {
+		//  Post the status to the user's own wall
+		db.addPost(req.body.post, req.session.username, req.params.profile, 'timestamp', function(data, err) {
+			if (err) {
+				data.stat = false;
+				res.send(data);
+			} else {
+				data.stat = false;
+				data.post = req.body.post;
+				data.postingUser = req.session.username;
+				data.wallUser = req.params.profile;
+				data.timestamp = 'timestamp';
+			}
+		});
+	} else {
+		data.stat = false;
+		res.send(data);
+	}
+}
+
+var routes = {
   get_login: getLogin,
   post_checklogin: postChecklogin,
   get_signup: getSignup,
   post_createaccount: postCreateaccount,
   get_profile: getProfile,
-  // post_status: postStatus,
+  post_status: postStatus,
   // post_deletestatus: postDeleteStatus,
   // get_editprofile: getEditProfile,
   // post_editprofile: postEditProfile,

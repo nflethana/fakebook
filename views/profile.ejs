@@ -2,6 +2,26 @@
 <html>
   <head><title>Map</title>
   <link rel="stylesheet" href="http://getbootstrap.com/dist/css/bootstrap.css">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript">
+	var ajcall = function(){
+	  $.post("/status",
+	  	{
+	      addPost: $("#post")[0].value,
+	      addUser: <%= userdata.username %>
+	    },
+	    function(data, status) {
+	      if (!data.stat) {
+	      	alert("Something went wrong.  Please be sure the post is not empty!");
+	      } else {
+
+	      }
+	    }
+      );
+      return false;
+	};
+	
+  </script>
   
 </head><body>
   <%if (message != null) { %>
