@@ -131,7 +131,7 @@ var myDB_removeRestaurant = function(name, route_callback) {
 var postIndex = 0;
 var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callback) {
 	postIndex++;
-	simpledb.putAttributes({DomainName: 'posts', ItemName: postIndex, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
+	simpledb.putAttributes({DomainName: 'posts', ItemName: ''+postIndex, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
 		if (err) {
 			route_callback(null, "creation error: " + err);
 		} else {

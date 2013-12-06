@@ -8,11 +8,11 @@
 	  $.post("/status",
 	  	{
 	      addPost: $("#post")[0].value,
-	      addUser: <%= userdata.username %>
+	      addUser: '<%= userdata.username %>'
 	    },
 	    function(data, status) {
 	      if (!data.stat) {
-	      	alert("Something went wrong.  Please be sure the post is not empty!");
+	      	alert(data.err);
 	      } else {
 
 	      }

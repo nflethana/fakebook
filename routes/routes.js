@@ -224,25 +224,28 @@ var getProfile = function(req, res) {
 };
 
 var postStatus = function(req, res) {
-	var data = {};
+	var newData = {};
 	console.log('in poststatus');
 	if (req.session.username && req.session.password && req.session.userdata) {
 		//  Post the status to the user's own wall
-		db.addPost(req.body.post, req.session.username, req.params.profile, 'timestamp', function(data, err) {
+		//  PROBLEM HERE IS THAT REQ.PARAMS.PROFILE IS NOT WORKING CORRECTLY
+		db.addPost(req.body.addPost, req.body.addUser, req.params.profile, 'timestamp', function(data, err) {
 			if (err) {
-				data.stat = false;
-				res.send(data);
+				newData.stat = false;
+				newData.err = err;
+				res.send(newData);
 			} else {
-				data.stat = false;
-				data.post = req.body.post;
-				data.postingUser = req.session.username;
-				data.wallUser = req.params.profile;
-				data.timestamp = 'timestamp';
+				newData.stat = true;
+				newData.post = req.body.post;
+				newData.postingUser = req.session.username;
+				newData.wallUser = req.params.profile;
+				newData.timestamp = 'timestamp';
+				res.send(newData);
 			}
 		});
 	} else {
-		data.stat = false;
-		res.send(data);
+		newData.stat = false;
+		res.send(newData);
 	}
 }
 
