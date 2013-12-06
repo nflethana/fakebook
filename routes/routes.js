@@ -61,8 +61,17 @@ var getSignup = function(req, res) {
 var postCreateaccount = function(req, res) {
 	var username = req.body.username;
 	var password = req.body.password;
-	var fullname =  req.body.fullname;
+	var firstname = req.body.firstname;
+	var lastname = req.body.lastname;
+	var interestArray = req.body.interests.split(",");
+	var affiliationsArray = req.body.affiliations.split(",");
+	var dateofbirthArray = req.body.dateofbirth.split("-");
 	
+	if (dateofbirthArray.length != 3 || dateofbirthArray[0].length != 2 || dateofbirthArray[1].length != 2 || dateofbirthArray[2].length != 4) {
+		req.session.msg = "Date of Birth was not in the correct format!";
+		res.redirect('signup');
+	}
+
 	// if username or password is empty notify user and request new ones
 	if (username === '') {
 		req.session.msg = "Username cannot be blank!";
@@ -70,9 +79,15 @@ var postCreateaccount = function(req, res) {
 	} else if (password === '') {
 		req.session.msg = "Password cannot be blank!";
 		res.redirect('/signup');
+	} else if (firstname === '') {
+		req.session.msg = "Password cannot be blank!";
+		res.redirect('/signup');
+	} else if (lastname === '') {
+		req.session.msg = "Password cannot be blank!";
+		res.redirect('/signup');
 	} else {
 		// otherwise create the new account
-		db.createAccount(username, password, fullname, function(data, err) {
+		db.createAccount(username, password, firstname, lastname, interestArray, affiliationsArray, dateofbirthArray, function(data, err) {
 			if (err) {
 				// if there is an error redirect to signup and get ready to display error
 				req.session.msg = err;
@@ -82,7 +97,6 @@ var postCreateaccount = function(req, res) {
 				// otherwise log the user in and redirect to /restaurants
 				req.session.username = username;
 				req.session.password = password;
-				req.session.fullname = fullname;
 				res.redirect('/restaurants');
 			}
 		});
@@ -91,7 +105,7 @@ var postCreateaccount = function(req, res) {
 
 var getRestaurants = function(req, res) {
 	// if the user is logged in, get the data and render the page
-	if (req.session.username && req.session.password && req.session.fullname) {
+	if (req.session.username && req.session.password) {
 		db.getRestaurants(function (data, err) {
 			if (err) {
 				res.render('restaurants.ejs', {results: req.session.results, message: err, fullname: null, user: req.session.username});

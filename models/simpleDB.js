@@ -39,13 +39,13 @@ var myDB_checklogin = function(username, password, route_callback) {
 	});
 };
 
-var myDB_createAccount = function(username, password, fullname, route_callback) {
+var myDB_createAccount = function(username, password, firstname, lastname, interestsArray, affiliationsArray, dateofbirthArray, route_callback) {
 	simpledb.getAttributes({DomainName: 'users', ItemName: username}, function(err,data) {
 		if (err) {
 			route_callback(null, "There was a database error");
 		} else if (data.Attributes == undefined) {
 			// user doesn't exists, so create it!
-			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'fullname', 'Value': fullname}]}, function(err, data) {
+			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}]}, function(err, data) {
 				if (err) {
 					route_callback(null, "creation error: " + err);
 				} else {
