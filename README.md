@@ -9,9 +9,9 @@ Routes
 Get login
 Post login
 
-Get signup DONE
+DONE  Get signup
 
-Post createAccount DONE
+DONE  Post createAccount
 
 Get :profile
  Ajax to post status
@@ -30,7 +30,8 @@ DataBase
 
 SimpleDB, DynamoDB, or S3
 
-**Users**  DONE
+DONE  
+**Users**  
 Username
 Password
 Email
