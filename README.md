@@ -38,8 +38,11 @@ FirstName
 LastName
 Interests
 Affiliations
-Friends
 DateOfBirth
+
+**Friends**
+user1
+user2
 
 **Posts**
 Username (of Poster)
