@@ -143,40 +143,31 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 	});
 };
 
-var myDB_getUserProfileData = function(requestedUsername, requestingUsername) {
+var myDB_getUserProfileData = function(requestedUsername, requestingUsername, route_callback) {
 	//  Get the requestedUser's data iff the users are mutual friends
 	if (myDB_areFriends(requestedUsername, requestingUsername)) {
 		simpledb.getAttributes({DomainName: 'users', ItemName: requestedUsername}, function(err,data) {
 			if (err) {
-				route_callback(null, "There was a database error");
+				route_callback(false, "There was a database error");
 			} else if (data.Attributes == undefined) {
 				// it exists, so don't ruin the data
-				route_callback(null, "Restaurant already exists!");
+				route_callback(false, "Restaurant already exists!");
 			} else {
-				var firstname;
-				var lastname;
-				var interestsArray;
-				var affiliationsArray;
-				var dateofbirthArray;
-				var check = false;
+				var user = {};
 				for (i=0; i < data.Attributes.length; i++) {
 					if (data.Attributes[i].Name == 'firstname') {
-						firstname = data.Attributes[i].Value;
+						user.firstname = data.Attributes[i].Value;
 					} else if (data.Attributes[i].Name == 'lastname') {
-						lastname = data.Attributes[i].Value;
+						user.lastname = data.Attributes[i].Value;
 					} else if (data.Attributes[i].Name == 'interestsArray') {
-						interestsArray = data.Attributes[i].Value;
+						user.interestsArray = data.Attributes[i].Value;
 					} else if (data.Attributes[i].Name == 'affiliationsArray') {
-						affiliationsArray = data.Attributes[i].Value;
+						user.affiliationsArray = data.Attributes[i].Value;
 					} else if (data.Attributes[i].Name == 'dateofbirthArray') {
-						fullname = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'password') {
-						if (data.Attributes[i].Value == password) {
-							console.log("User : " + username + "logged in");
-							check = true;
-						}
+						user.fullname = data.Attributes[i].Value;
 					}
 				}
+				route_callback(user, null);
 			}
 		});
 	} else {
@@ -204,6 +195,48 @@ var myDB_areFriends = function(user1, user2) {
 	});
 };
 
+var myDb_addFriendship = function(user1, user2) {
+	if (user1 === user2) {
+		route_callback(false, "You're already friends with yourself silly!");
+	} else {
+		simpledb.getAttributes({DomainName: 'friendslist', ItemName: user1}, function(err,data) {
+			if (err) {
+				route_callback(null, "There was a database error");
+			} else if (data.Attributes == undefined) {
+				// user doesn't exists, so create it!
+				var auth1 = false;
+				var auth2 = false;
+				var error;
+				simpledb.putAttributes({DomainName: 'friendslist', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}]}, function(err, data) {
+					if (err) {
+						error = err;
+					} else {
+						auth1 = true;
+						error = null;
+					}
+				});
+				simpledb.putAttributes({DomainName: 'friendslist', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}]}, function(err, data) {
+					if (err) {
+						error = err;
+					} else {
+						auth2 = true;
+						error = null;
+					}
+				});
+
+				if (auth1 && auth2) {
+					route_callback(true, error);
+				} else {
+					route_callback(false, error);
+				}
+			} else {
+				// connection exists, so don't create one
+				route_callback(null, "These users are already friends!");
+			}
+		});
+	}
+};
+
 
 /* We define an object with one field for each method. For instance, below we have
    a 'lookup' field, which is set to the myDB_lookup function. In routes.js, we can
@@ -216,7 +249,9 @@ var database = {
   addRestaurant: myDB_addRestaurants,
   removeRestaurant: myDB_removeRestaurant,
   addPost: myDB_addPost,
-  getUserProfileData: myDB_getUserProfileData
+  getUserProfileData: myDB_getUserProfileData,
+  areFriends: myDB_areFriends,
+  addFriendship: myDb_addFriendship
 };
                                         
 module.exports = database;

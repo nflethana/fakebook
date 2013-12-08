@@ -216,9 +216,24 @@ var ajaxRemove = function(req, res) {
 var getProfile = function(req, res) {
 	if (req.session.username && req.session.password && req.session.userdata && req.params.profile === req.session.username) {
 		//  Get the profile user's data
-		res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: req.params.profile, message: null});
+		db.getUserProfileData(req.params.profile, function(data, err) {
+			if (data) {
+				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
+			} else {
+				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
+			}
+		});
 	} else {
-		// REPLACE WITH CODE FOR IF ANOTHER USER VIEWS YOUR PROFILE PAGE
+		db.getUserProfileData(req.session.userdata, req.params.profile, function(data, err) {
+			// fill with code to render with user data
+			db.getUserProfileData(req.params.profile, req.session.user, function(data, err) {
+				if (data) {
+					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
+				} else {
+					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
+				}
+			});
+		});
 		req.session.msg = "You must sign in first!";
 		res.redirect('/');
 	}
@@ -226,7 +241,6 @@ var getProfile = function(req, res) {
 
 var postStatus = function(req, res) {
 	var newData = {};
-	console.log('in poststatus');
 	if (req.session.username && req.session.password && req.session.userdata) {
 		//  PROBLEM HERE IS THAT REQ.PARAMS.PROFILE IS NOT WORKING CORRECTLY
 		console.log(req.body.walluserData);
@@ -261,7 +275,6 @@ var routes = {
   post_status: postStatus,
   // post_deletestatus: postDeleteStatus,
   // get_editprofile: getEditProfile,
-  // post_editprofile: postEditProfile,
   // post_comment: postComment,
 
   get_restaurants: getRestaurants,
