@@ -14,7 +14,7 @@ DONE  Get signup
 DONE  Post createAccount
 
 Get :profile
- Ajax to post status
+ DONE Ajax to post status
  Ajax to delete status
  Ajax to comment 
  
