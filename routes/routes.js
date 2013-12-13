@@ -1,9 +1,9 @@
 var db = require('../models/simpleDB.js');
+var SHA3 = require('crypto-js/sha3');
 
 var getLogin = function(req, res) {
 	// display error message if any
 	if (req.session.msg !== '') {
-		console.log(req.session.msg);
 		res.render('login.ejs', {message: req.session.msg});
 	} else {
 		// otherwise render login page
@@ -23,8 +23,11 @@ var postChecklogin = function(req, res) {
 		req.session.msg = 'Password cannot be blank!';
 		res.redirect('/');
 	} else {
+		
+		var hashedPassword = SHA3(password).toString();
+
 		// check the login
-		db.checklogin(username, password, function(data, err) {
+		db.checklogin(username, hashedPassword, function(data, err) {
 			if (err) {
 				res.send('Error logging in');
 			} else if (data) {
@@ -86,8 +89,11 @@ var postCreateaccount = function(req, res) {
 		req.session.msg = "Password cannot be blank!";
 		res.redirect('/signup');
 	} else {
+
+		var hashedPassword = SHA3(password).toString();
+
 		// otherwise create the new account
-		db.createAccount(username, password, firstname, lastname, interestArray, affiliationsArray, dateofbirthArray, function(data, err) {
+		db.createAccount(username, hashedPassword, firstname, lastname, interestArray, affiliationsArray, dateofbirthArray, function(data, err) {
 			if (err) {
 				// if there is an error redirect to signup and get ready to display error
 				req.session.msg = err;
