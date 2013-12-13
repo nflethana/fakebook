@@ -214,9 +214,19 @@ var ajaxRemove = function(req, res) {
 };
 
 var getProfile = function(req, res) {
+	console.log(req.params.profile);
+	console.log(req.session.username);
 	if (req.session.username && req.session.password && req.session.userdata && req.params.profile === req.session.username) {
 		//  Get the profile user's data
-		db.getUserProfileData(req.params.profile, function(data, err) {
+		db.getUserProfileData(req.params.profile, req.session.username, function(data, err) {
+			if (data) {
+				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
+			} else {
+				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
+			}
+		});
+	} else if (req.session.username && req.session.password && req.session.userdata && req.params.profile) {
+		db.getUserProfileData(req.params.profile, req.session.username, function(data, err) {
 			if (data) {
 				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
 			} else {
@@ -224,16 +234,6 @@ var getProfile = function(req, res) {
 			}
 		});
 	} else {
-		db.getUserProfileData(req.session.userdata, req.params.profile, function(data, err) {
-			// fill with code to render with user data
-			db.getUserProfileData(req.params.profile, req.session.user, function(data, err) {
-				if (data) {
-					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
-				} else {
-					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
-				}
-			});
-		});
 		req.session.msg = "You must sign in first!";
 		res.redirect('/');
 	}
@@ -242,19 +242,19 @@ var getProfile = function(req, res) {
 var postStatus = function(req, res) {
 	var newData = {};
 	if (req.session.username && req.session.password && req.session.userdata) {
-		//  PROBLEM HERE IS THAT REQ.PARAMS.PROFILE IS NOT WORKING CORRECTLY
-		console.log(req.body.walluserData);
+		console.log(req.body.user);
+		console.log(req.body.addPost);
 		console.log(req.session.userdata);
-		db.addPost(req.body.addPost, req.session.userdata.username, req.body.walluserData.username, 'timestamp', function(data, err) {
+		db.addPost(req.body.addPost, req.session.username, req.body.user, 'timestamp', function(data, err) {
 			if (err) {
 				newData.stat = false;
 				newData.err = err;
 				res.send(newData);
 			} else {
 				newData.stat = true;
-				newData.post = req.body.post;
+				newData.post = req.body.addPost;
 				newData.postingUser = req.session.username;
-				newData.walluserData = req.body.walluserData;
+				newData.walluserData = req.body.user;
 				newData.timestamp = 'timestamp';
 				res.send(newData);
 			}

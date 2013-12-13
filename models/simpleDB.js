@@ -131,16 +131,18 @@ var myDB_removeRestaurant = function(name, route_callback) {
 var postIndex = 0;
 var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callback) {
 	
-	//  ADD A CHECK TO MAKE SURE THE USERS ARE FRIENDS FIRST
-
-	postIndex++;
-	simpledb.putAttributes({DomainName: 'posts', ItemName: ''+postIndex, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
-		if (err) {
-			route_callback(null, "creation error: " + err);
-		} else {
-			route_callback(true, null);
-		}
-	});
+	if (myDB_areFriends(postingUser, wallUser)) {
+		postIndex++;
+		simpledb.putAttributes({DomainName: 'posts', ItemName: ''+postIndex, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
+			if (err) {
+				route_callback(null, "creation error: " + err);
+			} else {
+				route_callback(true, null);
+			}
+		});
+	} else {
+		route_callback(false, "You must be friends to post on their wall!");
+	}
 };
 
 var myDB_getUserProfileData = function(requestedUsername, requestingUsername, route_callback) {
@@ -164,9 +166,10 @@ var myDB_getUserProfileData = function(requestedUsername, requestingUsername, ro
 					} else if (data.Attributes[i].Name == 'affiliationsArray') {
 						user.affiliationsArray = data.Attributes[i].Value;
 					} else if (data.Attributes[i].Name == 'dateofbirthArray') {
-						user.fullname = data.Attributes[i].Value;
+						user.dateofbirthArray = data.Attributes[i].Value;
 					}
 				}
+				user.username = requestedUsername;
 				route_callback(user, null);
 			}
 		});
@@ -178,6 +181,9 @@ var myDB_getUserProfileData = function(requestedUsername, requestingUsername, ro
 var myDB_areFriends = function(user1, user2) {
 	// returns true iff user1 is a mutual friend with user2
 	// return false iff user1 is NOT a mutual friend with user2
+	if (user1 === user2) {
+		return true;
+	}
 	simpledb.getAttributes({DomainName: 'fiendslist', ItemName: user1}, function(err,data) {
 		if (err) {
 			return false;
