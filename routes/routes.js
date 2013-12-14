@@ -83,10 +83,10 @@ var postCreateaccount = function(req, res) {
 		req.session.msg = "Password cannot be blank!";
 		res.redirect('/signup');
 	} else if (firstname === '') {
-		req.session.msg = "Password cannot be blank!";
+		req.session.msg = "firstname cannot be blank!";
 		res.redirect('/signup');
 	} else if (lastname === '') {
-		req.session.msg = "Password cannot be blank!";
+		req.session.msg = "lastname cannot be blank!";
 		res.redirect('/signup');
 	} else {
 
@@ -103,6 +103,13 @@ var postCreateaccount = function(req, res) {
 				// otherwise log the user in and redirect to /restaurants
 				req.session.username = username;
 				req.session.password = password;
+				newDate = {};
+				newData.firstname = firstname;
+				newData.lastname = lastname;
+				newData.interestArray = interestArray;
+				newData.affiliationsArray = affiliationsArray;
+				newData.dateofbirthArray = dateofbirthArray;
+				req.session.userdata = newData;
 				res.redirect('/' + username);
 			}
 		});
@@ -220,19 +227,21 @@ var ajaxRemove = function(req, res) {
 };
 
 var getProfile = function(req, res) {
-	console.log(req.params.profile);
+	console.log(req.param('user'));
 	console.log(req.session.username);
-	if (req.session.username && req.session.password && req.session.userdata && req.params.profile === req.session.username) {
+	if (req.session.username && req.session.password && req.session.userdata && req.param('user') === req.session.username) {
 		//  Get the profile user's data
-		db.getUserProfileData(req.params.profile, req.session.username, function(data, err) {
+		db.getUserProfileData(req.param('user'), req.session.username, function(data, err) {
 			if (data) {
+				console.log(data);
 				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
 			} else {
+				console.log(data);
 				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
 			}
 		});
 	} else if (req.session.username && req.session.password && req.session.userdata && req.params.profile) {
-		db.getUserProfileData(req.params.profile, req.session.username, function(data, err) {
+		db.getUserProfileData(req.param('user'), req.session.username, function(data, err) {
 			if (data) {
 				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
 			} else {

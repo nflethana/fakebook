@@ -26,15 +26,14 @@ var myDB_checklogin = function(username, password, route_callback) {
 					firstname = data.Attributes[i].Value;
 				} else if (data.Attributes[i].Name == 'lastname') {
 					lastname = data.Attributes[i].Value;
-				} else if (data.Attributes[i].Name == 'interestsArray') {
+				} else if (data.Attributes[i].Name == 'interests') {
 					interestsArray = data.Attributes[i].Value;
-				} else if (data.Attributes[i].Name == 'affiliationsArray') {
+				} else if (data.Attributes[i].Name == 'affiliations') {
 					affiliationsArray = data.Attributes[i].Value;
-				} else if (data.Attributes[i].Name == 'dateofbirthArray') {
+				} else if (data.Attributes[i].Name == 'dateofbirth') {
 					fullname = data.Attributes[i].Value;
 				} else if (data.Attributes[i].Name == 'password') {
 					if (data.Attributes[i].Value == password) {
-						console.log("User : " + username + "logged in");
 						check = true;
 					}
 				}
@@ -153,7 +152,7 @@ var myDB_getUserProfileData = function(requestedUsername, requestingUsername, ro
 				route_callback(false, "There was a database error");
 			} else if (data.Attributes == undefined) {
 				// it exists, so don't ruin the data
-				route_callback(false, "Restaurant already exists!");
+				route_callback(false, "User already exists!");
 			} else {
 				var user = {};
 				for (i=0; i < data.Attributes.length; i++) {
@@ -161,11 +160,11 @@ var myDB_getUserProfileData = function(requestedUsername, requestingUsername, ro
 						user.firstname = data.Attributes[i].Value;
 					} else if (data.Attributes[i].Name == 'lastname') {
 						user.lastname = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'interestsArray') {
+					} else if (data.Attributes[i].Name == 'interests') {
 						user.interestsArray = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'affiliationsArray') {
+					} else if (data.Attributes[i].Name == 'affiliations') {
 						user.affiliationsArray = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'dateofbirthArray') {
+					} else if (data.Attributes[i].Name == 'dateofbirth') {
 						user.dateofbirthArray = data.Attributes[i].Value;
 					}
 				}

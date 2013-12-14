@@ -14,7 +14,7 @@
 	      if (!data.stat) {
 	      	alert(data.err);
 	      } else {
-
+          // display the new post on the page
 	      }
 	    }
       );
@@ -28,6 +28,9 @@
   <font color="red"><%= message %></font>
   <% } %>
   <h1><%= walluserData.firstname %> <%= walluserData.lastname%></h1>
+  <h2><%= walluserData.interestsArray %></h2>
+  <h2><%= walluserData.affiliationsArray %></h2>
+  <h2><%= walluserData.dateofbirthArray %></h2>
   
   <br>
   <form id="theform" action="" method="" onSubmit="ajcall(); return false">
