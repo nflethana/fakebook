@@ -260,7 +260,8 @@ var postStatus = function(req, res) {
 		console.log(req.body.user);
 		console.log(req.body.addPost);
 		console.log(req.session.userdata);
-		db.addPost(req.body.addPost, req.session.username, req.body.user, 'timestamp', function(data, err) {
+		timestamp = new Date().getTime();
+		db.addPost(req.body.addPost, req.session.username, req.body.user, timestamp, function(data, err) {
 			if (err) {
 				newData.stat = false;
 				newData.err = err;
@@ -270,7 +271,7 @@ var postStatus = function(req, res) {
 				newData.post = req.body.addPost;
 				newData.postingUser = req.session.username;
 				newData.walluserData = req.body.user;
-				newData.timestamp = 'timestamp';
+				newData.timestamp = timestamp;
 				res.send(newData);
 			}
 		});

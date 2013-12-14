@@ -15,6 +15,7 @@
 	      	alert(data.err);
 	      } else {
           // display the new post on the page
+          $('#posts').append("<p>" + data.post + "</p>");
 	      }
 	    }
       );
@@ -31,6 +32,10 @@
   <h2><%= walluserData.interestsArray %></h2>
   <h2><%= walluserData.affiliationsArray %></h2>
   <h2><%= walluserData.dateofbirthArray %></h2>
+
+  <div id="posts">
+    <h1>Posts:</h1>
+  </div>
   
   <br>
   <form id="theform" action="" method="" onSubmit="ajcall(); return false">
