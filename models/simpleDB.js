@@ -138,8 +138,8 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 			} else {
 				route_callback(true, null);
 
-				// INSERT CODE HERE TO ADD THE NEW POST TO A LIST OF USER'S POSTS
-				simpledb.getAttributes({DomainName: 'users', ItemName: requestedUsername}, function(err,data) {
+				// ADD THE NEW POST TO A LIST OF USER'S POSTS
+				simpledb.getAttributes({DomainName: 'users', ItemName: wallUser}, function(err,data) {
 					if (err) {
 						route_callback(false, "There was a database error");
 					} else if (data.Attributes == undefined) {
@@ -148,24 +148,24 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 					} else {
 						var user = {};
 						for (i=0; i < data.Attributes.length; i++) {
-							if (data.Attributes[i].Name == 'firstname') {
-								user.firstname = data.Attributes[i].Value;
-							} else if (data.Attributes[i].Name == 'lastname') {
-								user.lastname = data.Attributes[i].Value;
-							} else if (data.Attributes[i].Name == 'interests') {
-								user.interestsArray = data.Attributes[i].Value;
-							} else if (data.Attributes[i].Name == 'affiliations') {
-								user.affiliationsArray = data.Attributes[i].Value;
-							} else if (data.Attributes[i].Name == 'dateofbirth') {
-								user.dateofbirthArray = data.Attributes[i].Value;
+							if (data.Attributes[i].Name == 'posts1') {
+								if (data.Attributes[i].Value.length + uniqueID.length + 1 < 512) {
+									simpledb.putAttributes({DomainName: 'users', ItemName: wallUser, Attributes: [{'Name': 'posts1', 'Value': data.Attributes[i].Value + "uniqueID,", Replace: true}]})
+								}
+							} else {
+								//  Account for the case we need to look for posts2,3,4,etc.... and create them!
 							}
 						}
-						user.username = requestedUsername;
-						route_callback(user, null);
-					}
-				}
 
-				// ADD A PART HERE THAT UPDATES FRIENDS OF MY NEW POST FOR TIMELINE PURPOSES
+
+						// ADD A PART HERE THAT UPDATES FRIENDS OF MY NEW POST FOR TIMELINE PURPOSES
+						
+
+						route_callback(true, null);
+
+
+					}
+				});
 			
 			}
 		});
