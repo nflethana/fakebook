@@ -1,6 +1,7 @@
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('config.json');
 var simpledb = new AWS.SimpleDB();
+var uuid = require('node-uuid');
 
 /* The function below is an example of a database method. Whenever you need to 
    access your database, you should define a function (myDB_addUser, myDB_getPassword, ...)
@@ -55,7 +56,7 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 			route_callback(null, "There was a database error");
 		} else if (data.Attributes == undefined) {
 			// user doesn't exists, so create it!
-			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}]}, function(err, data) {
+			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}, {'Name': 'posts1', 'Value': ''}]}, function(err, data) {
 				if (err) {
 					route_callback(null, "creation error: " + err);
 				} else {
@@ -127,16 +128,45 @@ var myDB_removeRestaurant = function(name, route_callback) {
 	});
 };
 
-var postIndex = 0;
 var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callback) {
 	
 	if (myDB_areFriends(postingUser, wallUser)) {
-		postIndex++;
-		simpledb.putAttributes({DomainName: 'posts', ItemName: ''+postIndex, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
+		var uniqueID = uuid.v1();
+		simpledb.putAttributes({DomainName: 'posts', ItemName: ''+uniqueID, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
 			if (err) {
 				route_callback(null, "creation error: " + err);
 			} else {
 				route_callback(true, null);
+
+				// INSERT CODE HERE TO ADD THE NEW POST TO A LIST OF USER'S POSTS
+				simpledb.getAttributes({DomainName: 'users', ItemName: requestedUsername}, function(err,data) {
+					if (err) {
+						route_callback(false, "There was a database error");
+					} else if (data.Attributes == undefined) {
+						// it exists, so don't ruin the data
+						route_callback(false, "User already exists!");
+					} else {
+						var user = {};
+						for (i=0; i < data.Attributes.length; i++) {
+							if (data.Attributes[i].Name == 'firstname') {
+								user.firstname = data.Attributes[i].Value;
+							} else if (data.Attributes[i].Name == 'lastname') {
+								user.lastname = data.Attributes[i].Value;
+							} else if (data.Attributes[i].Name == 'interests') {
+								user.interestsArray = data.Attributes[i].Value;
+							} else if (data.Attributes[i].Name == 'affiliations') {
+								user.affiliationsArray = data.Attributes[i].Value;
+							} else if (data.Attributes[i].Name == 'dateofbirth') {
+								user.dateofbirthArray = data.Attributes[i].Value;
+							}
+						}
+						user.username = requestedUsername;
+						route_callback(user, null);
+					}
+				}
+
+				// ADD A PART HERE THAT UPDATES FRIENDS OF MY NEW POST FOR TIMELINE PURPOSES
+			
 			}
 		});
 	} else {

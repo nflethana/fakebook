@@ -11,6 +11,7 @@
       "ejs": "*",
       "async": "*",
       "sleep": "*",
-      "crypto-js": "*"
+      "crypto-js": "*",
+      "node-uuid": "*"
    }
 }
