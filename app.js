@@ -36,18 +36,12 @@ app.post('/checklogin', routes.post_checklogin);
 app.get('/signup', routes.get_signup);
 app.post('/createaccount', routes.post_createaccount);
 app.get('/home/:user', routes.get_profile);
-app.post('/status', routes.post_status);
 // app.post('/deletestatus', routes.post_deletestatus);
 // app.get('/edit/:profile', routes.get_editprofile);
 // app.post('/edit/:profile', routes.post_editprofile);
 // app.post('/comment', routes.post_comment);
 
-app.get('/restaurants', routes.get_restaurants);
-app.post('/addrestaurant', routes.post_addrestaurant);
 app.get('/logout', routes.get_logout);
-app.post('/ajaxadd', routes.post_ajaxadd);
-app.get('/ajaxgetrestaurants', routes.get_ajaxgetrestaurants);
-app.post('/ajaxremove', routes.post_ajaxremove);
 
 /* Run the server */
 
