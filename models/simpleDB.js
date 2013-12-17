@@ -55,6 +55,7 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 		if (err) {
 			route_callback(null, "There was a database error");
 		} else if (data.Attributes == undefined) {
+			console.log("in createAccount 1" + JSON.stringify(data));
 			// user doesn't exists, so create it!
 			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}, {'Name': 'posts1', 'Value': ''}]}, function(err, data) {
 				if (err) {
@@ -64,6 +65,7 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 				}
 			});
 		} else {
+			console.log("in createAccount" + data + err);
 			// user exists, so don't create
 			route_callback(null, "Username already exists!");
 		}
@@ -132,12 +134,10 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 	
 	if (myDB_areFriends(postingUser, wallUser)) {
 		var uniqueID = uuid.v1();
-		simpledb.putAttributes({DomainName: 'posts', ItemName: ''+uniqueID, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
+		simpledb.putAttributes({DomainName: 'posts', ItemName: ''+uniqueID, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp + ''}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
 			if (err) {
 				route_callback(null, "creation error: " + err);
 			} else {
-				route_callback(true, null);
-
 				// ADD THE NEW POST TO A LIST OF USER'S POSTS
 				simpledb.getAttributes({DomainName: 'users', ItemName: wallUser}, function(err,data) {
 					if (err) {
@@ -149,8 +149,24 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 						var user = {};
 						for (i=0; i < data.Attributes.length; i++) {
 							if (data.Attributes[i].Name == 'posts1') {
-								if (data.Attributes[i].Value.length + uniqueID.length + 1 < 512) {
-									simpledb.putAttributes({DomainName: 'users', ItemName: wallUser, Attributes: [{'Name': 'posts1', 'Value': data.Attributes[i].Value + "uniqueID,", Replace: true}]})
+								if (data.Attributes[i].Value !== null) {
+									if (data.Attributes[i].Value.length + uniqueID.length + 1 < 512) {
+										simpledb.putAttributes({DomainName: 'users', ItemName: wallUser, Attributes: [{'Name': 'posts1', 'Value': data.Attributes[i].Value + uniqueID + ',', Replace: true}]}, function (err, data) {
+											if (err) {
+												route_callback(null, "creation error:" + err);
+											} else {
+												route_callback(true, null);
+											}
+										});
+									}
+								} else {
+									simpledb.putAttributes({DomainName: 'users', ItemName: wallUser, Attributes: [{'Name': 'posts1', 'Value': data.Attributes[i].Value + uniqueID + ',', Replace: true}]}, function(err, data) {
+										if (err) {
+											route_callback(null, "creation error:" + err);
+										} else {
+											route_callback(true, null);
+										}
+									});
 								}
 							} else {
 								//  Account for the case we need to look for posts2,3,4,etc.... and create them!
@@ -159,14 +175,10 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 
 
 						// ADD A PART HERE THAT UPDATES FRIENDS OF MY NEW POST FOR TIMELINE PURPOSES
-						
-
-						route_callback(true, null);
 
 
 					}
 				});
-			
 			}
 		});
 	} else {
@@ -242,7 +254,7 @@ var myDb_addFriendship = function(user1, user2) {
 				var auth1 = false;
 				var auth2 = false;
 				var error;
-				simpledb.putAttributes({DomainName: 'friendslist', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}]}, function(err, data) {
+				simpledb.putAttributes({DomainName: 'friendslist', ItemName: user1, Attributes: [{'Name': 'otherUsername', 'Value': user2}]}, function(err, data) {
 					if (err) {
 						error = err;
 					} else {
@@ -250,7 +262,7 @@ var myDb_addFriendship = function(user1, user2) {
 						error = null;
 					}
 				});
-				simpledb.putAttributes({DomainName: 'friendslist', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}]}, function(err, data) {
+				simpledb.putAttributes({DomainName: 'friendslist', ItemName: user2, Attributes: [{'Name': 'otherUsername', 'Value': user1}]}, function(err, data) {
 					if (err) {
 						error = err;
 					} else {

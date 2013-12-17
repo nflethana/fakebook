@@ -4,10 +4,10 @@ var SHA3 = require('crypto-js/sha3');
 var getLogin = function(req, res) {
 	// display error message if any
 	if (req.session.msg !== '') {
-		res.render('login.ejs', {message: req.session.msg});
+		res.render('login.ejs', {message: null});
 	} else {
 		// otherwise render login page
-		res.render('login.ejs', {message: null});
+		res.render('login.ejs', {message: req.session.msg});
 	}
 };
 
@@ -37,7 +37,7 @@ var postChecklogin = function(req, res) {
 					req.session.username = username;
 					req.session.password = password;
 					req.session.userdata = data;
-					res.redirect('/' + username);
+					res.redirect('/home/' + username);
 				} else {
 					// otherwise notify of incorrect password
 					req.session.msg = "I'm sorry, the password you provided was incorrect";
@@ -53,11 +53,11 @@ var postChecklogin = function(req, res) {
 
 var getSignup = function(req, res) {
 	// show error message if any
-	if (req.session.msg) {
-		res.render('signup.ejs', {message: req.session.msg});
+	if (req.session.msg !== '') {
+		res.render('signup.ejs', {message: null});
 	} else {
 		// otherwise render signup page
-		res.render('signup.ejs', {message: null});
+		res.render('signup.ejs', {message: req.session.msg});
 	}
 };
 
@@ -98,19 +98,19 @@ var postCreateaccount = function(req, res) {
 				// if there is an error redirect to signup and get ready to display error
 				req.session.msg = err;
 				res.redirect('/signup');
-			}
-			else if (data) {
+			} else if (data) {
 				// otherwise log the user in and redirect to /restaurants
 				req.session.username = username;
 				req.session.password = password;
-				newDate = {};
+				newData = {};
 				newData.firstname = firstname;
 				newData.lastname = lastname;
 				newData.interestArray = interestArray;
 				newData.affiliationsArray = affiliationsArray;
 				newData.dateofbirthArray = dateofbirthArray;
 				req.session.userdata = newData;
-				res.redirect('/' + username);
+				console.log("in postCreateaccount: " + req.session.msg);
+				res.redirect('/home/' + username);
 			}
 		});
 	}
