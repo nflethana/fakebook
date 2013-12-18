@@ -9,7 +9,7 @@ var routes = require('./routes/routes.js');
 var app = express();
 
 app.use(express.bodyParser());
-app.use(express.logger("default"));
+// app.use(express.logger("default"));
 // set up cookies
 app.use(express.cookieParser());
 app.use(express.session({secret: 'thisIsMySecret'}));
@@ -41,6 +41,7 @@ app.get('/home/:user', routes.get_profile);
 // app.post('/edit/:profile', routes.post_editprofile);
 // app.post('/comment', routes.post_comment);
 
+app.post('/friend', routes.post_friend);
 app.get('/logout', routes.get_logout);
 
 /* Run the server */

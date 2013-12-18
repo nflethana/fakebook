@@ -55,7 +55,6 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 		if (err) {
 			route_callback(null, "There was a database error");
 		} else if (data.Attributes == undefined) {
-			console.log("in createAccount 1" + JSON.stringify(data));
 			// user doesn't exists, so create it!
 			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}, {'Name': 'posts1', 'Value': ''}]}, function(err, data) {
 				if (err) {
@@ -65,7 +64,6 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 				}
 			});
 		} else {
-			console.log("in createAccount" + data + err);
 			// user exists, so don't create
 			route_callback(null, "Username already exists!");
 		}
@@ -129,9 +127,8 @@ var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callba
 	}
 };
 
-var myDB_getUserProfileData = function(requestedUsername, requestingUsername, route_callback) {
+var myDB_getUserProfileData = function(requestedUsername, route_callback) {
 	//  Get the requestedUser's data iff the users are mutual friends
-	if (myDB_areFriends(requestedUsername, requestingUsername)) {
 		simpledb.getAttributes({DomainName: 'users', ItemName: requestedUsername}, function(err,data) {
 			if (err) {
 				route_callback(false, "There was a database error");
@@ -157,74 +154,90 @@ var myDB_getUserProfileData = function(requestedUsername, requestingUsername, ro
 				route_callback(user, null);
 			}
 		});
-	} else {
-		route_callback(false, "I'm sorry, but you must be friends with this person to view their profile.");
-	}
 };
 
-var myDB_areFriends = function(user1, user2) {
+var myDB_areFriends = function(user1, user2, callback) {
 	// returns true iff user1 is a mutual friend with user2
 	// return false iff user1 is NOT a mutual friend with user2
 	if (user1 === user2) {
-		return true;
+		callback(true);
 	}
-	simpledb.getAttributes({DomainName: 'fiendslist', ItemName: user1}, function(err,data) {
-		if (err) {
-			return false;
-		} else if (data.Attributes == undefined) {
-			return false;
-		} else {
-			for (i=0; i < data.Attributes.length; i++) {
-				if (data.Attributes[i].Name == 'otherUsername') {
-					if (data.Attributes[i].Value === data.Attributes[i].Value === user2){
-						return true;
-					}
-				}
+	var str = "SELECT * FROM friends WHERE friend='"+user2+"'";
+	var flag = false;
+	simpledb.select({SelectExpression: str}, function(err, data) {
+		for (i=0; i<data.Items.length; i++) {
+			if (data.Items[i].Name == user1) {
+				console.log(user1 + " and " + user2 + " are friends already");
+				flag = true;
 			}
 		}
+		if (flag) {
+			callback(true);
+		} else {
+			callback(false);
+		}
 	});
+	
 };
 
-var myDb_addFriendship = function(user1, user2) {
+var myDb_addFriendship = function(user1, user2, route_callback) {
 	if (user1 === user2) {
 		route_callback(false, "You're already friends with yourself silly!");
+	} else if (myDB_areFriends(user1, user2)) {
+		route_callback(false, "You are already with this person!");
 	} else {
-		simpledb.getAttributes({DomainName: 'friendslist', ItemName: user1}, function(err,data) {
+		simpledb.putAttributes({DomainName: 'friends', ItemName: user1, Attributes: [{'Name': 'friend', 'Value': user2}] }, function(err, data) {
 			if (err) {
-				route_callback(null, "There was a database error");
-			} else if (data.Attributes == undefined) {
-				// user doesn't exists, so create it!
-				var auth1 = false;
-				var auth2 = false;
-				var error;
-				simpledb.putAttributes({DomainName: 'friendslist', ItemName: user1, Attributes: [{'Name': 'otherUsername', 'Value': user2}]}, function(err, data) {
-					if (err) {
-						error = err;
-					} else {
-						auth1 = true;
-						error = null;
-					}
-				});
-				simpledb.putAttributes({DomainName: 'friendslist', ItemName: user2, Attributes: [{'Name': 'otherUsername', 'Value': user1}]}, function(err, data) {
-					if (err) {
-						error = err;
-					} else {
-						auth2 = true;
-						error = null;
-					}
-				});
-
-				if (auth1 && auth2) {
-					route_callback(true, error);
-				} else {
-					route_callback(false, error);
-				}
+				route_callback(false, "Failed putAttributes Friend");
 			} else {
-				// connection exists, so don't create one
-				route_callback(null, "These users are already friends!");
+				simpledb.putAttributes({DomainName: 'friends', ItemName: user2, Attributes: [{'Name': 'friend', 'Value': user1}] }, function(err, data) {
+					if (err) {
+						route_callback(false, "Failed putAttributes Friend 2");
+					} else {
+						// this is the success case?
+						route_callback(true, null);
+					}
+				});
 			}
 		});
 	}
+
+	// 	simpledb.getAttributes({DomainName: 'friendslist', ItemName: user1}, function(err,data) {
+	// 		if (err) {
+	// 			route_callback(null, "There was a database error");
+	// 		} else if (data.Attributes == undefined) {
+	// 			// user doesn't exists, so create it!
+	// 			var auth1 = false;
+	// 			var auth2 = false;
+	// 			var error;
+	// 			simpledb.putAttributes({DomainName: 'friendslist', ItemName: user1, Attributes: [{'Name': 'otherUsername', 'Value': user2}]}, function(err, data) {
+	// 				if (err) {
+	// 					error = err;
+	// 				} else {
+	// 					auth1 = true;
+	// 					error = null;
+	// 				}
+	// 			});
+	// 			simpledb.putAttributes({DomainName: 'friendslist', ItemName: user2, Attributes: [{'Name': 'otherUsername', 'Value': user1}]}, function(err, data) {
+	// 				if (err) {
+	// 					error = err;
+	// 				} else {
+	// 					auth2 = true;
+	// 					error = null;
+	// 				}
+	// 			});
+
+	// 			if (auth1 && auth2) {
+	// 				route_callback(true, error);
+	// 			} else {
+	// 				route_callback(false, error);
+	// 			}
+	// 		} else {
+	// 			// connection exists, so don't create one
+	// 			route_callback(null, "These users are already friends!");
+	// 		}
+	// 	});
+	// }
 };
 
 

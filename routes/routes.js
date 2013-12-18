@@ -109,7 +109,6 @@ var postCreateaccount = function(req, res) {
 				newData.affiliationsArray = affiliationsArray;
 				newData.dateofbirthArray = dateofbirthArray;
 				req.session.userdata = newData;
-				console.log("in postCreateaccount: " + req.session.msg);
 				res.redirect('/home/' + username);
 			}
 		});
@@ -126,26 +125,27 @@ var getLogout = function(req, res) {
 };
 
 var getProfile = function(req, res) {
-	console.log(req.param('user'));
-	console.log(req.session.username);
+	var btn = {};
+	// one route for if you visit your own page
 	if (req.session.username && req.session.password && req.session.userdata && req.param('user') === req.session.username) {
-		//  Get the profile user's data
-		db.getUserProfileData(req.param('user'), req.session.username, function(data, err) {
-			if (data) {
-				console.log(data);
-				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
-			} else {
-				console.log(data);
-				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
-			}
+		db.getUserProfileData(req.param('user'), function(data, err) {
+			btn.x = false;
+			res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
 		});
-	} else if (req.session.username && req.session.password && req.session.userdata && req.params.profile) {
-		db.getUserProfileData(req.param('user'), req.session.username, function(data, err) {
-			if (data) {
-				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
-			} else {
-				res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err});
-			}
+	} else if (req.session.username && req.session.password && req.session.userdata) {
+		db.getUserProfileData(req.param('user'), function(data, err) {
+			if (err) { console.log(err); }
+			db.areFriends(req.session.username, req.param('user'), function(truth) {
+				// one route for if you visit a friends page
+				if (truth) {
+					btn.x = false;
+					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
+				// one route for if you visit a strangers page
+				} else {
+					btn.x = true;
+					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
+				}
+			});
 		});
 	} else {
 		req.session.msg = "You must sign in first!";
@@ -156,9 +156,6 @@ var getProfile = function(req, res) {
 var postStatus = function(req, res) {
 	var newData = {};
 	if (req.session.username && req.session.password && req.session.userdata) {
-		console.log(req.body.user);
-		console.log(req.body.addPost);
-		console.log(req.session.userdata);
 		timestamp = new Date().getTime();
 		db.addPost(req.body.addPost, req.session.username, req.body.user, timestamp, function(data, err) {
 			if (err) {
@@ -181,6 +178,28 @@ var postStatus = function(req, res) {
 	}
 };
 
+var postFriend = function(req, res) {
+	var user = req.session.username;
+	var pf = req.body.potentialfriend;
+	var sendData = {};
+	console.log("User: "+user+" PF: "+pf);
+
+	db.areFriends(user, pf, function(success) {
+		// if already friends tell them
+		if (success) {
+			sendData.error = "You are already friends with that person!";
+			res.send(sendData);
+		// if not friends make them friends
+		} else {
+			db.addFriendship(user, pf, function(success, error) {
+				sendData.success = success;
+				sendData.error = error;
+				res.send(sendData);
+			});
+		}
+	});
+}
+
 var routes = {
   get_login: getLogin,
   post_checklogin: postChecklogin,
@@ -188,6 +207,7 @@ var routes = {
   post_createaccount: postCreateaccount,
   get_profile: getProfile,
   post_status: postStatus,
+  post_friend: postFriend,
   // post_deletestatus: postDeleteStatus,
   // get_editprofile: getEditProfile,
   // post_comment: postComment,

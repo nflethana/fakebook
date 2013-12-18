@@ -22,6 +22,18 @@
       return false;
 	};
 	
+  var ajaxfriend = function() {
+    $.post("/friend", {
+      potentialfriend: "<%= walluserData.username %>"
+    }, function(data) {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        $('#friendreqform').hide();
+      }
+    });
+  };
+
   </script>
   
 </head><body>
@@ -38,6 +50,13 @@
   </div>
   
   <br>
+  <%if (butn.x == true) { %>
+  <form id="friendreqform" onSubmit="ajaxfriend(); return false">
+    Friend This Person: <input type="submit" id="friendbtn" value="Friend">
+  </form>
+  <% } %>
+  <br>
+
   <form id="theform" action="" method="" onSubmit="ajcall(); return false">
     Post to Wall: <input id="post" type="text" name="post"><br>
  	<input type="submit" id="btn" value="Post">
