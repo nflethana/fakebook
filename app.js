@@ -42,7 +42,10 @@ app.get('/home/:user', routes.get_profile);
 // app.post('/comment', routes.post_comment);
 
 app.post('/friend', routes.post_friend);
+app.post('/status', routes.post_status);
 app.get('/logout', routes.get_logout);
+
+app.get('/friendvisualization', routes.post_visualization);
 
 /* Run the server */
 

@@ -128,24 +128,28 @@ var getProfile = function(req, res) {
 	var btn = {};
 	// one route for if you visit your own page
 	if (req.session.username && req.session.password && req.session.userdata && req.param('user') === req.session.username) {
-		db.getUserProfileData(req.param('user'), function(data, err) {
+		console.log("GetProfileIf "+req.session.username + " and "+ req.param('user'));
+		db.getUserProfileData(req.param('user'), req.session.username, function(data, err) {
 			btn.x = false;
 			res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
 		});
 	} else if (req.session.username && req.session.password && req.session.userdata) {
-		db.getUserProfileData(req.param('user'), function(data, err) {
+		db.getUserProfileData(req.param('user'), req.session.username, function(data, err) {
 			if (err) { console.log(err); }
-			db.areFriends(req.session.username, req.param('user'), function(truth) {
-				// one route for if you visit a friends page
-				if (truth) {
-					btn.x = false;
-					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
-				// one route for if you visit a strangers page
-				} else {
-					btn.x = true;
-					res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
-				}
-			});
+			else { 
+				console.log("getProfile" + req.param('user'));
+				db.areFriends(req.session.username, req.param('user'), function(truth) {
+					// one route for if you visit a friends page
+					if (truth) {
+						btn.x = false;
+						res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
+					// one route for if you visit a strangers page
+					} else {
+						btn.x = true;
+						res.render('profile.ejs', {visitorData: req.session.userdata, walluserData: data, message: err, butn: btn});
+					}
+				});
+			}
 		});
 	} else {
 		req.session.msg = "You must sign in first!";
@@ -200,6 +204,25 @@ var postFriend = function(req, res) {
 	});
 }
 
+var postVisualization = function(req, res) {
+	var user = req.session.username;
+	var graph = {};
+	graph.id = user;
+	graph.name = user;
+	graph.children = [];
+	graph.data = [];
+	//  GET LIST OF FRIENDS FROM DB
+	for (i=0; i<friends.length; i++) {
+		var friend = {};
+		friend.id = friends[i];
+		friend.name = friends[i];
+		friend.data = {};
+		friend.children = [];
+		graph.children.push(friend);
+	}
+};
+
+
 var routes = {
   get_login: getLogin,
   post_checklogin: postChecklogin,
@@ -212,7 +235,8 @@ var routes = {
   // get_editprofile: getEditProfile,
   // post_comment: postComment,
 
-  get_logout: getLogout
+  get_logout: getLogout,
+  post_visualization: postVisualization
 };
 
 module.exports = routes;

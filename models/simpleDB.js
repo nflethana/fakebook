@@ -2,6 +2,7 @@ var AWS = require('aws-sdk');
 AWS.config.loadFromPath('config.json');
 var simpledb = new AWS.SimpleDB();
 var uuid = require('node-uuid');
+var async = require('async');
 
 /* The function below is an example of a database method. Whenever you need to 
    access your database, you should define a function (myDB_addUser, myDB_getPassword, ...)
@@ -56,7 +57,7 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 			route_callback(null, "There was a database error");
 		} else if (data.Attributes == undefined) {
 			// user doesn't exists, so create it!
-			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()}, {'Name': 'posts1', 'Value': ''}]}, function(err, data) {
+			simpledb.putAttributes({DomainName: 'users', ItemName: username, Attributes: [{'Name': 'password', 'Value': password}, {'Name': 'firstname', 'Value': firstname}, {'Name': 'lastname', 'Value': lastname}, {'Name': 'interests', 'Value': interestsArray.toString()}, {'Name': 'affiliations', 'Value': affiliationsArray.toString()}, {'Name': 'dateofbirth', 'Value': dateofbirthArray.toString()} ]}, function(err, data) {
 				if (err) {
 					route_callback(null, "creation error: " + err);
 				} else {
@@ -72,111 +73,141 @@ var myDB_createAccount = function(username, password, firstname, lastname, inter
 
 
 var myDB_addPost = function(post, postingUser, wallUser, timestamp, route_callback) {
-	
-	if (myDB_areFriends(postingUser, wallUser)) {
-		var uniqueID = uuid.v1();
-		simpledb.putAttributes({DomainName: 'posts', ItemName: ''+uniqueID, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp + ''}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
-			if (err) {
-				route_callback(null, "creation error: " + err);
-			} else {
-				// ADD THE NEW POST TO A LIST OF USER'S POSTS
-				simpledb.getAttributes({DomainName: 'users', ItemName: wallUser}, function(err,data) {
-					if (err) {
-						route_callback(false, "There was a database error");
-					} else if (data.Attributes == undefined) {
-						// it exists, so don't ruin the data
-						route_callback(false, "User already exists!");
-					} else {
-						var user = {};
-						for (i=0; i < data.Attributes.length; i++) {
-							if (data.Attributes[i].Name == 'posts1') {
-								if (data.Attributes[i].Value !== null) {
-									if (data.Attributes[i].Value.length + uniqueID.length + 1 < 512) {
-										simpledb.putAttributes({DomainName: 'users', ItemName: wallUser, Attributes: [{'Name': 'posts1', 'Value': data.Attributes[i].Value + uniqueID + ',', Replace: true}]}, function (err, data) {
-											if (err) {
-												route_callback(null, "creation error:" + err);
-											} else {
-												route_callback(true, null);
-											}
-										});
-									}
-								} else {
-									simpledb.putAttributes({DomainName: 'users', ItemName: wallUser, Attributes: [{'Name': 'posts1', 'Value': data.Attributes[i].Value + uniqueID + ',', Replace: true}]}, function(err, data) {
-										if (err) {
-											route_callback(null, "creation error:" + err);
-										} else {
-											route_callback(true, null);
-										}
-									});
-								}
-							} else {
-								//  Account for the case we need to look for posts2,3,4,etc.... and create them!
-							}
+	myDB_areFriends(postingUser, wallUser, function(status) {
+		if (status) {
+			var uniqueID = uuid.v1();
+			simpledb.putAttributes({DomainName: 'posts', ItemName: ''+uniqueID, Attributes: [{'Name': 'post', 'Value': post}, {'Name': 'postingUser', 'Value': postingUser}, {'Name': 'wallUser', 'Value': wallUser}, {'Name': 'comments', 'Value': ''}, {'Name': 'timestamp', 'Value': timestamp + ''}, {'Name': 'likes', 'Value': '0'}]}, function(err, data) {
+				if (err) {
+					route_callback(null, "creation error: " + err);
+				} else {
+					// Add the new post to the users_posts_rltn table
+					simpledb.putAttributes({DomainName: 'users_posts_rltn', ItemName: wallUser, Attributes: [{'Name': 'posts', Value: '' + uniqueID}]}, function(err, data) {
+						if (err) {
+							route_callback(null, "creation error in users_posts_rltn:" + err);
+						} else {
+							route_callback(true, null);
 						}
-
-
-						// ADD A PART HERE THAT UPDATES FRIENDS OF MY NEW POST FOR TIMELINE PURPOSES
-
-
-					}
-				});
-			}
-		});
-	} else {
-		route_callback(false, "You must be friends to post on their wall!");
-	}
+					});
+				}
+			});
+		} else {
+			route_callback(false, "You must be friends to post on their wall!");
+		}
+	});
 };
 
-var myDB_getUserProfileData = function(requestedUsername, route_callback) {
-	//  Get the requestedUser's data iff the users are mutual friends
-		simpledb.getAttributes({DomainName: 'users', ItemName: requestedUsername}, function(err,data) {
-			if (err) {
-				route_callback(false, "There was a database error");
-			} else if (data.Attributes == undefined) {
-				// it exists, so don't ruin the data
-				route_callback(false, "User already exists!");
-			} else {
-				var user = {};
-				for (i=0; i < data.Attributes.length; i++) {
-					if (data.Attributes[i].Name == 'firstname') {
-						user.firstname = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'lastname') {
-						user.lastname = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'interests') {
-						user.interestsArray = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'affiliations') {
-						user.affiliationsArray = data.Attributes[i].Value;
-					} else if (data.Attributes[i].Name == 'dateofbirth') {
-						user.dateofbirthArray = data.Attributes[i].Value;
+var myDB_getUserProfileData = function(requestedUsername, requestingUsername, route_callback) {
+	console.log(requestedUsername+ " and "+requestingUsername);
+	myDB_areFriends(requestedUsername, requestingUsername, function(flag) {
+		if (flag) {
+			simpledb.getAttributes({DomainName: 'users', ItemName: requestedUsername}, function(err,data) {
+				if (err) {
+					route_callback(false, "There was a database error");
+				} else if (data.Attributes == undefined) {
+					// it exists, so don't ruin the data
+					route_callback(false, "User doesn't exist!");
+				} else {
+					var user = {};
+					for (i=0; i < data.Attributes.length; i++) {
+						if (data.Attributes[i].Name == 'firstname') {
+							user.firstname = data.Attributes[i].Value;
+						} else if (data.Attributes[i].Name == 'lastname') {
+							user.lastname = data.Attributes[i].Value;
+						} else if (data.Attributes[i].Name == 'interests') {
+							user.interestsArray = data.Attributes[i].Value;
+						} else if (data.Attributes[i].Name == 'affiliations') {
+							user.affiliationsArray = data.Attributes[i].Value;
+						} else if (data.Attributes[i].Name == 'dateofbirth') {
+							user.dateofbirthArray = data.Attributes[i].Value;
+						}
 					}
+					console.log("MIDWAY");
+					statusesRaw = [];
+					statuses = [];
+					simpledb.getAttributes({DomainName: 'users_posts_rltn', ItemName: requestedUsername}, function(err, data) {
+						if (err) {
+							route_callback(false, "There was a database error getting from users_posts_rltn");
+						} else if (data.Attributes !== undefined) {
+							for (i=0; i<data.Attributes.length; i++) {
+								if (data.Attributes[i].Name == 'posts') {
+									statusesRaw.push(data.Attributes[i].Value);
+								}
+							}
+							console.log("Before Async" + statusesRaw);
+							async.forEach(statusesRaw, function(s, callback) {
+								simpledb.getAttributes({DomainName: 'posts', ItemName: s}, function(err, data) {
+									if (err) {
+
+									} else {
+										status = {};
+										for (j=0; j<data.Attributes.length; j++) {
+											if (data.Attributes[j].Name == "post") {
+												status.post = data.Attributes[j].Value;
+											} else if (data.Attributes[j].Name == "postingUser") {
+												status.postingUser = data.Attributes[j].Value;
+											} else if (data.Attributes[j].Name == "wallUser") {
+												status.wallUser = data.Attributes[j].Value;
+											} else if (data.Attributes[j].Name == "comments") {
+												status.comments = data.Attributes[j].Value;
+											} else if (data.Attributes[j].Name == "timestamp") {
+												status.timestamp = data.Attributes[j].Value;
+											} else if (data.Attributes[j].Name == "likes") {
+												status.likes = data.Attributes[j].Value;
+											}
+										}
+										statuses.push(status);
+										callback(err);
+									}
+								});
+							}
+							, function (err) {
+								console.log("in the outter function");
+								user.statuses = statuses;
+								user.username = requestedUsername;
+								console.log("In getUserProfileData... " + JSON.stringify(user));
+								route_callback(user, null);
+							});
+						} else {
+							user.statuses = statuses;
+							user.username = requestedUsername;
+							route_callback(user, null);
+						}
+					});
 				}
-				user.username = requestedUsername;
-				route_callback(user, null);
-			}
-		});
+			});
+		} else {
+			route_callback(false, "I'm sorry, but you must be friends with this person to view their profile.");
+		}
+	});
 };
 
 var myDB_areFriends = function(user1, user2, callback) {
 	// returns true iff user1 is a mutual friend with user2
 	// return false iff user1 is NOT a mutual friend with user2
-	if (user1 === user2) {
+	console.log("U1: "+ user1 + " U2: "+user2);
+	if (user1 == user2) {
+		console.log("He's his own friend");
 		callback(true);
 	}
-	var str = "SELECT * FROM friends WHERE friend='"+user2+"'";
-	var flag = false;
-	simpledb.select({SelectExpression: str}, function(err, data) {
-		for (i=0; i<data.Items.length; i++) {
-			if (data.Items[i].Name == user1) {
-				console.log(user1 + " and " + user2 + " are friends already");
-				flag = true;
+	else {
+		var str = "SELECT * FROM friends WHERE friend='"+user2+"'";
+		var flag = false;
+		console.log(str);
+		simpledb.select({SelectExpression: str}, function(err, data) {
+			if (err) { console.log(err); }
+			for (i=0; i<data.Items.length; i++) {
+				if (data.Items[i].Name == user1) {
+					console.log(user1 + " and " + user2 + " are friends already");
+					flag = true;
+				}
 			}
-		}
-		if (flag) {
-			callback(true);
-		} else {
-			callback(false);
-		}
-	});
+			if (flag) {
+				callback(true);
+			} else {
+				callback(false);
+			}
+		});
+	}
 	
 };
 
@@ -201,43 +232,6 @@ var myDb_addFriendship = function(user1, user2, route_callback) {
 			}
 		});
 	}
-
-	// 	simpledb.getAttributes({DomainName: 'friendslist', ItemName: user1}, function(err,data) {
-	// 		if (err) {
-	// 			route_callback(null, "There was a database error");
-	// 		} else if (data.Attributes == undefined) {
-	// 			// user doesn't exists, so create it!
-	// 			var auth1 = false;
-	// 			var auth2 = false;
-	// 			var error;
-	// 			simpledb.putAttributes({DomainName: 'friendslist', ItemName: user1, Attributes: [{'Name': 'otherUsername', 'Value': user2}]}, function(err, data) {
-	// 				if (err) {
-	// 					error = err;
-	// 				} else {
-	// 					auth1 = true;
-	// 					error = null;
-	// 				}
-	// 			});
-	// 			simpledb.putAttributes({DomainName: 'friendslist', ItemName: user2, Attributes: [{'Name': 'otherUsername', 'Value': user1}]}, function(err, data) {
-	// 				if (err) {
-	// 					error = err;
-	// 				} else {
-	// 					auth2 = true;
-	// 					error = null;
-	// 				}
-	// 			});
-
-	// 			if (auth1 && auth2) {
-	// 				route_callback(true, error);
-	// 			} else {
-	// 				route_callback(false, error);
-	// 			}
-	// 		} else {
-	// 			// connection exists, so don't create one
-	// 			route_callback(null, "These users are already friends!");
-	// 		}
-	// 	});
-	// }
 };
 
 

@@ -47,6 +47,9 @@
 
   <div id="posts">
     <h1>Posts:</h1>
+    <% walluserData.statuses.forEach(function(status) { %>
+      <p><%= status.post %></p>
+    <% }); %>
   </div>
   
   <br>
